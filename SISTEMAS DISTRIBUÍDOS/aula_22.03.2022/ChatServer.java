@@ -10,7 +10,7 @@ public class ChatServer{
     private final Set<String> userNames = new HashSet<>();
 
     // lista dos Threads (objetos Thread)
-    //private final Set<UserThread> userThreads = new HashSet<>();
+    private final Set<UserThread> userThreads = new HashSet<>();
     
     // construtor
     public ChatServer(int port){
@@ -70,5 +70,30 @@ public class ChatServer{
         // instancia o Servidor de Chat
         ChatServer server = new ChatServer(port);
         server.execute();
+    }
+    //implementação de métodos auxiliares para a manutenção do software
+
+    boolean hasUsers(){
+        return !this.userNames.isEmpty();
+    }
+    Set<String> getUserNames (){
+        return this.userNames;
+    }
+
+    public void adduserNames (String userName){
+        userNames.add(userName);
+    }
+
+    public void removeUser(String userName, UserThread aUser){
+        //Para cada usuario será criado uma thread diferente
+        boolean removed = userNames.remove(userName);
+        userThreads.remove(aUser);
+        System.out.println("user: " + userName + "Exit");
+    }
+
+    //envia uma mensagem de aviso para a "rede", comunicando a saída do user
+    public void broadccas(String serverMessage, UserThread excludeUser){
+        userThreads.stream().filter((aUser) -> (aUser != excludeUser)).forEachOrdered(//Função anônima ou (lambda)
+            (aUser) -> aUser.sendMessage(serverMessage));
     }
 }
