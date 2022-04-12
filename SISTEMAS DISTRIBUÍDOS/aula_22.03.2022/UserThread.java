@@ -1,77 +1,90 @@
-import java.io.*;// requisições de entrada/saida 
-import java.net.*; //conexoes de rede (sockets)
-import java.util.*; //fins gerais
+import java.io.*; // requisições de entrada/saída
+import java.net.*; // conexões de rede (sockets)
 
-public class UserThread extends Thread {
-    private final Socket socket; //Meio de comunicação TCP
-    private final ChatServer server; // servidor de Chat
-    private PrintWriter writer; //escrever no buffer de saida (I/O)
+public class UserThread extends Thread{
+    private final Socket socket; // meio de comunicação (TCP)
+    private final ChatServer server; // o servidor de Chat
+    private PrintWriter writer; // Escrever no buffer de saída (I/[O])
 
-    public UserThread (Socket socket, ChatServer server){
+    public UserThread(Socket socket, ChatServer server){
         this.socket = socket;
-        this.server = server; 
+        this.server = server;
+    }
 
-        }
+    @Override
+    public void run(){
+        try {
+            // leitura dos dados
+            InputStream input = socket.getInputStream();
 
-        @Override
-        public void run(){
-            try {
-                //Leitura dos dos 
-                InputStream input = socket.getInputStream();
+            // joga os dados no buffer
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                //joga os dados nos buffer
+            // canal de saída (response)
+            OutputStream output = socket.getOutputStream();
+            writer = new PrintWriter(output, true);
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+            // mostrar os usuários conectados
+            printUsers();
 
-                // Canal de saída (response)
-                OutputStream output = socket.getOutputStream();
-                writer = new PrintWriter(output, true);
+            // capturar os dados do teclado (cliente) - remote mode
+            String userName = reader.readLine();
+            server.addUserName(userName);
 
-                //Mostrar os usuários conectados
-                printUsers();
+            // broadcast - falar para a geral!!!!!!
+            String serverMessage = "New user connected: " + userName;
+            server.broadcast(serverMessage, this);
 
-                // Capturar os dados do teclado (cliente) - remote mode
-                String username = reader.readLine();
-                server.adduserNames(username);
+            // capturar a mensagem do cliente
+            String clientMessage;
 
-                // Brodcast - famoso avião de droga
-                String serverMessage = "New user connected" + username;
-                server.broadccas(serverMessage, this);
-
-                //Capturar mensagem do client
-                String clientMessage;
-
-                // Repetição remota das mensagens
-                do {
+            // repetição para leitura remota das mensagens
+            do {
                 clientMessage = reader.readLine();
-                serverMessage = "[" + username + "]: " + clientMessage;
-                server.broadccas(serverMessage, this);
+                // aqui é um ponto crítico para realizar várias verificações
 
-                //Mostrar a mensagem enviada ao servidor no seu console
+                // * filtragem de palavras não permitidas (azul -> ***)
+                //   Entrada: O céu está azul
+                //   Saída:   O céu está ***
+                // Uma ideia: enviar um broadcast avisando sobre palavras não permitidas
+
+                // * Request via API 
+
+                serverMessage = "[" + userName + "]: " + clientMessage;
+                server.broadcast(serverMessage, this);
+
+                // mostra a mensagem enviada ao servidor no seu console
                 System.out.println(serverMessage);
 
-                }while(!clientMessage.equals("bye"));
-                //Uma vez o usuário desconectado
-                // Remover o usuário
-                server.removeUser(username, this);
+                // armazena os dados enviados em um BD e/ou Log
 
-                //fecha a conexao
-                socket.close();
+            }while(!clientMessage.equals("bye"));
 
-                //avisa a galera que o usaername saiu
-                serverMessage = username + "exited";
-                server.broadccas(serverMessage, this);
+            // uma vez o usuário desconectado...
+            
+            // remover o usuário
+            server.removeUser(userName, this);
+            
+            //fecha a conexão
+            socket.close();
 
+            // avisa a galera que userName saiu da parada!!!!!
+            serverMessage = userName + " exited";
+            server.broadcast(serverMessage, this);
 
-            } catch (Exception e) {
-                System.out.println("Err" + e);
-            }}
+        } catch (Exception ioe) {
+            System.out.println("Err: " + ioe.getMessage());
+        }
+    }
+    void printUsers(){
+        if(server.hasUsers()){ // classe ChatServer
+            writer.println("Users connected: " + server.getUserNames()); 
+        }else{
+            writer.println("No users connected");
+        }
+    }
 
-            void printUsers () {
-                if (server.hasUsers()){
-                    writer.println("Users connected: " + server.getUserNames());
-                }else {
-                    writer.println("No users connected");
-                }
+    void sendMessage(String message){
+        writer.println(message);
     }
 }

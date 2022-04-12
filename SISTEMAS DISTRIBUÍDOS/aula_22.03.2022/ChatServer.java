@@ -22,7 +22,7 @@ public class ChatServer{
     public void execute(){
         try(ServerSocket serverSocket = new ServerSocket(port)){
 
-            System.out.println("Server excuting in port: " + port);
+            System.out.println("Server executing in port: " + port);
             System.out.println("CTRL+C to finish");
 
             // executando o serviço
@@ -34,6 +34,10 @@ public class ChatServer{
                 System.out.println("New user connected: [" + ip + "]");
 
                 // criar o Thread dos usuários
+                UserThread newUser = new UserThread(socket, this);
+                userThreads.add(newUser);
+                newUser.start();
+                System.out.println(newUser);
             }
 
         }catch(IOException ioex){
@@ -50,20 +54,7 @@ public class ChatServer{
             System.out.println("");
             System.exit(0); // sai do programa sem gerar erro
         }
-
-        // 1. O valor digitado é um número?
-        // 2. Está dentro e um intervalo válido? (9000 até 9099)
-
-        /**
-         * Principais portas
-         * http: 80
-         * https: 443
-         * ftp: 21
-         * telnet: 23
-         * ssh: 22
-         * mysql; 3306
-         */
-
+        
         // vamos pegar o valor (a porta) e executar o serviço
         int port = Integer.parseInt(args[0]); // converte String para inteiro
 
@@ -71,29 +62,30 @@ public class ChatServer{
         ChatServer server = new ChatServer(port);
         server.execute();
     }
-    //implementação de métodos auxiliares para a manutenção do software
 
+    // implementação de métodos auxiliares para a manutenção do software
     boolean hasUsers(){
         return !this.userNames.isEmpty();
     }
-    Set<String> getUserNames (){
+
+    Set<String> getUserNames(){
         return this.userNames;
     }
 
-    public void adduserNames (String userName){
+    public void addUserName(String userName){
         userNames.add(userName);
     }
 
     public void removeUser(String userName, UserThread aUser){
-        //Para cada usuario será criado uma thread diferente
         boolean removed = userNames.remove(userName);
-        userThreads.remove(aUser);
-        System.out.println("user: " + userName + "Exit");
+        if (removed){
+            userThreads.remove(aUser);
+            System.out.println("User: " + userName + " exit.");
+        }
     }
 
-    //envia uma mensagem de aviso para a "rede", comunicando a saída do user
-    public void broadccas(String serverMessage, UserThread excludeUser){
-        userThreads.stream().filter((aUser) -> (aUser != excludeUser)).forEachOrdered(//Função anônima ou (lambda)
-            (aUser) -> aUser.sendMessage(serverMessage));
+    // envia uma mensagem de aviso para a "rede", comunicando a saída do User
+    public void broadcast(String serverMessage, UserThread excludeUser){
+        userThreads.stream().filter( (aUser) -> (aUser != excludeUser)).forEachOrdered( (aUser) -> aUser.sendMessage(serverMessage));
     }
 }
