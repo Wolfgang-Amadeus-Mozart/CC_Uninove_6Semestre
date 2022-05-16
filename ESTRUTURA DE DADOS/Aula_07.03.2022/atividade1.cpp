@@ -12,6 +12,7 @@ int main(){
 		//i=0
 		//0+1=1 i=1
 		//1+1=2 i=2
+		
 		//1+2=3 i=3 => sai da repetição
 		printf("Digite um número ");
 		scanf("%f",&v[i]);
