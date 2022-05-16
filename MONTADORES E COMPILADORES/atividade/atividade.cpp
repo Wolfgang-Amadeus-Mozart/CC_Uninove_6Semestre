@@ -1,10 +1,14 @@
 /* 
+
+ATIIDADE APRESENTADA A MATÉRIA DE MONTADORES E COMPILADORES
+RA: 919210778
+NOME: FILIPE QUEIROZ DE ABREU
+
 Desenvolver um programa que receba um texto e, a partir desse texto, 
 exibir cada palavra por linha e a no final a quantidade palavras nesse texto. 
 As palavras exibidas não devem conter caracteres especiais ao final delas, por exemplo:
 exclamação, interrogação, ponto final, dois pontos, virgula, três pontos entre outros.
-
- */
+*/
 
 # include <stdio.h>
 # include <conio.h>
